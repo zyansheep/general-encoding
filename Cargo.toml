@@ -1,10 +1,10 @@
 [package]
-name = "integer-encoding"
+name = "variant-encoding"
 version = "1.1.5"
-authors = ["Lewin Bormann <lbo@spheniscida.de>"]
-description = "varint+zigzag and fixedint integer encoding/decoding (https://developers.google.com/protocol-buffers/docs/encoding)"
-repository = "https://github.com/dermesser/integer-encoding-rs"
-documentation = "https://docs.rs/integer-encoding/"
+authors = ["Lewin Bormann <lbo@spheniscida.de>", "Zyansheep" ]
+description = "varint+zigzag, fixedint, and variant string encoding/decoding (https://developers.google.com/protocol-buffers/docs/encoding)"
+repository = "https://github.com/zyansheep/variant-encoding"
+# documentation = "https://docs.rs/integer-encoding/"
 license-file = "LICENSE"
 keywords = ["integer", "varint", "zigzag", "protobuf", "serialize"]
 edition = "2018"
@@ -29,4 +29,3 @@ futures_async = ["futures-util", "async-trait"]
 [package.metadata.docs.rs]
 
 features = ["tokio_async"]
-

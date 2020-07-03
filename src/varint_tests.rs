@@ -8,6 +8,10 @@ mod tests {
     use crate::writer::VarIntWriter;
     use crate::reader::VarIntReader;
     use crate::varint::VarInt;
+    
+    use crate::writer::VarStringWriter;
+    use crate::reader::VarStringReader;
+    
 
     #[test]
     fn test_required_space() {
@@ -146,7 +150,28 @@ mod tests {
         assert_eq!(i5, reader.read_varint_async().await.unwrap());
         assert!(reader.read_varint_async::<u32>().await.is_err());
     }
-
+    
+    #[test]
+    fn test_varstring_reader_writer() {
+        let mut buf = Vec::with_capacity(512);
+        
+        let i1 = "Some Text"; // Some Text
+        let i2 = "여기에 일부 텍스트 🙂"; // Unicode
+        let i3 = String::from_utf8_lossy(&[8, 1, 2, 4, 1]); // Incorrect Unicode
+        
+        buf.write_varstring(i1);
+        buf.write_varstring(i2);
+        buf.write_varstring(&i3);
+        
+        let mut reader: &[u8] = buf.as_ref();
+        
+        assert_eq!(i1, reader.read_varstring().unwrap());
+        assert_eq!(i2, reader.read_varstring().unwrap());
+        assert_eq!(i3, reader.read_varstring().unwrap());
+        
+        assert!(reader.read_varstring().is_err());
+    }
+    
     #[test]
     fn test_unterminated_varint() {
         let buf = vec![0xff as u8; 12];

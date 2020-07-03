@@ -1,4 +1,4 @@
-use std::io::{Result, Write};
+use std::io::{self, Result, Write};
 
 use crate::fixed::FixedInt;
 use crate::varint::VarInt;
@@ -20,13 +20,13 @@ pub trait VarIntWriter {
 #[async_trait::async_trait]
 pub trait VarIntAsyncWriter {
     /// Write a VarInt integer to an asynchronous writer.
-    async fn write_varint_async<VI: VarInt + Send>(&mut self, n: VI) -> Result<usize>;
+    async fn write_varint<VI: VarInt + Send>(&mut self, n: VI) -> Result<usize>;
 }
 
 #[cfg(any(feature = "tokio_async", feature = "futures_async"))]
 #[async_trait::async_trait]
 impl<AW: AsyncWrite + Send + Unpin> VarIntAsyncWriter for AW {
-    async fn write_varint_async<VI: VarInt + Send>(&mut self, n: VI) -> Result<usize> {
+    async fn write_varint<VI: VarInt + Send>(&mut self, n: VI) -> Result<usize> {
         let mut buf = [0 as u8; 10];
         let b = n.encode_var(&mut buf);
         self.write(&buf[0..b]).await
@@ -70,4 +70,31 @@ impl<W: Write> FixedIntWriter for W {
 
         self.write(&buf[0..FI::required_space()])
     }
+}
+
+pub trait VarStringWriter {
+	fn write_varstring(&mut self, string: &str) -> io::Result<usize>;
+}
+impl<W: io::Write> VarStringWriter for W {
+	fn write_varstring(&mut self, string: &str) -> io::Result<usize> {
+		let mut written = self.write_varint(string.len())?;
+		written += self.write(string.as_bytes())?;
+		Ok(written)
+	}
+}
+
+#[cfg(any(feature = "tokio_async", feature = "futures_async"))]
+#[async_trait::async_trait]
+pub trait VarintStringAsyncWriter {
+	async fn write_varstring(&mut self, string: &str) -> io::Result<usize>;
+}
+
+#[cfg(any(feature = "tokio_async", feature = "futures_async"))]
+#[async_trait::async_trait]
+impl<AW: AsyncWrite + Unpin + Send> VarStringAsyncWriter for AW {
+    async fn write_varstring(&mut self, string: &str) -> io::Result<usize> {
+		let mut written = self.write_varint(string.len()).await?;
+		written += self.write(string.as_bytes()).await?;
+		Ok(written)
+	}
 }

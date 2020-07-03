@@ -1,7 +1,7 @@
 //! Fast serialization of integers.
 //!
 //! ```
-//! use integer_encoding::*;
+//! use variant_encoding::*;
 //!
 //! fn main() {
 //!     let a: u32 = 344;
@@ -27,16 +27,26 @@ mod writer;
 pub use fixed::FixedInt;
 pub use varint::VarInt;
 
+pub use reader::FixedIntReader;
 #[cfg(any(feature = "tokio_async", feature = "futures_async"))]
 pub use reader::FixedIntAsyncReader;
+
+pub use reader::VarIntReader;
 #[cfg(any(feature = "tokio_async", feature = "futures_async"))]
 pub use reader::VarIntAsyncReader;
-pub use reader::FixedIntReader;
-pub use reader::VarIntReader;
 
+pub use reader::VarStringReader;
+#[cfg(any(feature = "tokio_async", feature = "futures_async"))]
+pub use reader::VarStringAsyncReader;
+
+pub use writer::FixedIntWriter;
 #[cfg(any(feature = "tokio_async", feature = "futures_async"))]
 pub use writer::FixedIntAsyncWriter;
+
+pub use writer::VarIntWriter;
 #[cfg(any(feature = "tokio_async", feature = "futures_async"))]
 pub use writer::VarIntAsyncWriter;
-pub use writer::FixedIntWriter;
-pub use writer::VarIntWriter;
+
+pub use writer::VarStringWriter;
+#[cfg(any(feature = "tokio_async", feature = "futures_async"))]
+pub use writer::VarStringAsyncWriter;

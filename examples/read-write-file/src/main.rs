@@ -1,7 +1,7 @@
 use std::fs;
 use std::io;
 
-use integer_encoding::*;
+use variant_encoding::*;
 
 async fn write_test_files() -> io::Result<()> {
     let _ = fs::remove_file("/tmp/varintbytes");

@@ -1,5 +1,4 @@
-use std::io;
-use std::io::{Read, Result};
+use std::io::{self, Read, Result};
 
 use crate::fixed::FixedInt;
 use crate::varint::{VarInt, MSB};
@@ -27,7 +26,7 @@ pub trait VarIntReader {
 /// Like a VarIntReader, but returns a future.
 #[async_trait::async_trait]
 pub trait VarIntAsyncReader {
-    async fn read_varint_async<VI: VarInt>(&mut self) -> Result<VI>;
+    async fn read_varint<VI: VarInt>(&mut self) -> Result<VI>;
 }
 
 /// VarIntProcessor encapsulates the logic for decoding a VarInt byte-by-byte.
@@ -50,7 +49,7 @@ impl VarIntProcessor {
         Ok(())
     }
     fn finished(&self) -> bool {
-        (self.i > 0 && (self.buf[self.i - 1] & MSB == 0))
+        self.i > 0 && (self.buf[self.i - 1] & MSB == 0)
     }
     fn decode<VI: VarInt>(&self) -> VI {
         VI::decode_var(&self.buf[0..self.i]).0
@@ -60,7 +59,7 @@ impl VarIntProcessor {
 #[cfg(any(feature = "tokio_async", feature = "futures_async"))]
 #[async_trait::async_trait]
 impl<AR: AsyncRead + Unpin + Send> VarIntAsyncReader for AR {
-    async fn read_varint_async<VI: VarInt>(&mut self) -> Result<VI> {
+    async fn read_varint<VI: VarInt>(&mut self) -> Result<VI> {
         let mut buf = [0 as u8; 1];
         let mut p = VarIntProcessor::default();
 
@@ -135,5 +134,33 @@ impl<R: Read> FixedIntReader for R {
         let mut buf = [0 as u8; 8];
         self.read_exact(&mut buf[0..FI::required_space()])?;
         Ok(FI::decode_fixed(&buf[0..FI::required_space()]))
+    }
+}
+
+pub trait VarStringReader {
+	fn read_varstring(&mut self) -> Result<String>;
+}
+impl<R: io::Read> VarStringReader for R {
+    fn read_varstring(&mut self) -> Result<String> {
+		let length: usize = self.read_varint()?;
+		let mut buf = vec![0 as u8; length];
+		self.read(&mut buf)?;
+		Ok(String::from_utf8_lossy(&buf).to_string())
+    }
+}
+
+#[cfg(any(feature = "tokio_async", feature = "futures_async"))]
+#[async_trait::async_trait]
+pub trait VarStringAsyncReader {
+    async fn read_varstring(&mut self) -> Result<String>;
+}
+#[cfg(any(feature = "tokio_async", feature = "futures_async"))]
+#[async_trait::async_trait]
+impl<AR: AsyncRead + Unpin + Send> VarStringAsyncReader for AR {
+	async fn read_varstring(&mut self) -> Result<String> {
+        let length: usize = self.read_varint().await?;
+		let mut buf = vec![0 as u8; length];
+		self.read(&mut buf).await?;
+		Ok(String::from_utf8_lossy(&buf).to_string())
     }
 }
