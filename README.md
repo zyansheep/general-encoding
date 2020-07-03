@@ -16,3 +16,4 @@ other unsigned number.
 
 ## VarString
 
+`VarString` encodes a VarInt and a string of `u8` of the length of the `VarInt`
